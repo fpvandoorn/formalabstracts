@@ -1,9 +1,12 @@
 import ..basic
        ring_theory.algebra
        linear_algebra.tensor_product
+       ring_theory.ideal_operations
+
+open set
 
 universes u v w
-variables {R : Type*} [comm_ring R]
+variables {R : Type*} {S : Type*} [comm_ring R] [comm_ring S]
 variables {M : Type*} {N : Type*} [ring M] [ring N]
 variables [algebra R M] [algebra R N]
 
@@ -11,6 +14,7 @@ local notation M ` ⊗[`:100 R `] ` N:100 := tensor_product R M N
 
 namespace algebra
 
+/-- A R-module is an R-algebra if scalar multiplication commutes with multiplication -/
 def of_module {R : Type u} {A : Type v} [comm_ring R] [ring A] [m : module R A]
   (h : ∀(r : R) (x y : A), r • x * y = x * r • y) : algebra R A :=
 { to_fun := λ r, r • 1,
@@ -19,7 +23,22 @@ def of_module {R : Type u} {A : Type v} [comm_ring R] [ring A] [m : module R A]
   smul_def' := by { intros, rw [h, one_mul] },
   ..m }
 
+def induced_algebra (f : R → S) [is_ring_hom f] : Type* := S
+instance (f : R → S) [is_ring_hom f] : comm_ring (induced_algebra f) := _inst_2
+instance (f : R → S) [is_ring_hom f] : algebra R (induced_algebra f) :=
+algebra.of_ring_hom f (by apply_instance)
+
 end algebra
+open algebra
+namespace alg_hom
+
+protected def of_ring_hom (f : R → S) [is_ring_hom f] : R →ₐ[R] induced_algebra f :=
+{ to_fun := f,
+  hom := by apply_instance,
+  commutes' := λ r, rfl }
+
+end alg_hom
+
 open algebra
 
 namespace tensor_product
